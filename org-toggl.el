@@ -138,12 +138,11 @@ its id.")
   "Make PROJECT the default.
 It is assumed that no two projects have the same name."
   (interactive (list (completing-read "Default project: " toggl-projects nil t)))
-  (setq toggl-default-project (cdr (assoc project toggl-projects))))
+  (setq toggl-default-project (toggl-get-pid project)))
 
-(defun toggl-start-time-entry (description &optional pid)
+(defun toggl-start-time-entry (description &optional pid show-message)
   "Start Toggl time entry."
-  (interactive "MDescription: \n")
-  (setq toggl-current-time-entry nil)
+  (interactive "MDescription: \ni\np")
   (setq pid (or pid toggl-default-project))
   (toggl-request-post
    "time_entries/start"
@@ -175,6 +174,10 @@ It is assumed that no two projects have the same name."
        (cl-function
 	(lambda (&key error-thrown &allow-other-keys)
 	  (message "Stopping time entry failed because %s" error-thrown))))))
+(defun toggl-get-pid (project)
+  "Get PID given PROJECT's name."
+  (cdr (assoc project toggl-projects)))
+
 
 (provide 'org-toggl)
 ;;; org-toggl.el ends here
