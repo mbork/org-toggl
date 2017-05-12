@@ -198,6 +198,44 @@ By default, delete the current one."
   "Get PID given PROJECT's name."
   (cdr (assoc project toggl-projects)))
 
+(defcustom org-toggl-inherit-toggl-properties nil
+  "Make org-toggl use property inheritance.")
+
+(defun org-toggl-clock-in ()
+  "Start a Toggl time entry based on current heading."
+  (let* ((heading (substring-no-properties (org-get-heading t t t t)))
+	 (project (org-entry-get (point) "project" org-toggl-inherit-toggl-properties))
+	 (pid (toggl-get-pid project)))
+    (when pid (toggl-start-time-entry heading pid t))))
+
+(defun org-toggl-clock-out ()
+  "Stop the running Toggle time entry."
+  (toggl-stop-time-entry t))
+
+(defun org-toggl-clock-cancel ()
+  "Delete the running Toggle time entry."
+  (toggl-delete-time-entry nil t))
+
+(defun org-toggl-set-project (project)
+  "Save PROJECT in the properties of the current Org headline."
+  (interactive (list (completing-read "Toggl project for this headline: " toggl-projects nil t))) ; TODO: dry!
+  (org-set-property "project" project))
+
+(define-minor-mode org-toggl-integration-mode
+  "Toggle a (global) minor mode for Org/Toggl integration.
+When on, clocking in and out starts and stops Toggl time entries
+automatically."
+  :init-value nil
+  :global t
+  :lighter " T-O"
+  (if org-toggl-integration-mode
+      (progn
+	(add-hook 'org-clock-in-hook #'org-toggl-clock-in)
+	(add-hook 'org-clock-out-hook #'org-toggl-clock-out)
+	(add-hook 'org-clock-cancel-hook #'org-toggl-clock-cancel))
+    (remove-hook 'org-clock-in-hook #'org-toggl-clock-in)
+    (remove-hook 'org-clock-out-hook #'org-toggl-clock-out)
+    (remove-hook 'org-clock-cancel-hook #'org-toggl-clock-cancel)))
 
 (provide 'org-toggl)
 ;;; org-toggl.el ends here
