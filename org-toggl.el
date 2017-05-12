@@ -111,7 +111,7 @@ its id.")
     (lambda (&key data &allow-other-keys)
       (setq toggl-projects
 	    (mapcar (lambda (project)
-		      (cons (alist-get 'name project)
+		      (cons (substring-no-properties (alist-get 'name project))
 			    (alist-get 'id project)))
 		    (alist-get 'projects (alist-get 'data data))))
       (message "Toggl projects successfully downloaded.")))
