@@ -159,21 +159,23 @@ It is assumed that no two projects have the same name."
     (lambda (&key error-thrown &allow-other-keys)
       (when show-message (message "Starting time entry failed because %s" error-thrown))))))
 
-(defun toggl-stop-time-entry ()
+(defun toggl-stop-time-entry (&optional show-message)
   "Stop running Toggl time entry."
-  (interactive)
-  (if toggl-current-time-entry
-      (toggl-request-put
-       (format "time_entries/%s/stop"
-	       (alist-get 'id (alist-get 'data toggl-current-time-entry)))
-       nil
-       nil
-       (cl-function
-	(lambda (&key data &allow-other-keys)
-	  (message "Toggl time entry stopped.")))
-       (cl-function
-	(lambda (&key error-thrown &allow-other-keys)
-	  (message "Stopping time entry failed because %s" error-thrown))))))
+  (interactive "p")
+  (when toggl-current-time-entry
+    (toggl-request-put
+     (format "time_entries/%s/stop"
+	     (alist-get 'id (alist-get 'data toggl-current-time-entry)))
+     nil
+     nil
+     (cl-function
+      (lambda (&key data &allow-other-keys)
+	(when show-message (message "Toggl time entry stopped."))))
+     (cl-function
+      (lambda (&key error-thrown &allow-other-keys)
+	(when show-message (message "Stopping time entry failed because %s" error-thrown)))))
+    (setq toggl-current-time-entry nil)))
+
 (defun toggl-get-pid (project)
   "Get PID given PROJECT's name."
   (cdr (assoc project toggl-projects)))
