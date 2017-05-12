@@ -154,10 +154,10 @@ It is assumed that no two projects have the same name."
    (cl-function
     (lambda (&key data &allow-other-keys)
       (setq toggl-current-time-entry data)
-      (message "Toggl time entry started.")))
+      (when show-message (message "Toggl time entry started."))))
    (cl-function
     (lambda (&key error-thrown &allow-other-keys)
-      (message "Starting time entry failed because %s" error-thrown)))))
+      (when show-message (message "Starting time entry failed because %s" error-thrown))))))
 
 (defun toggl-stop-time-entry ()
   "Stop running Toggl time entry."
