@@ -93,6 +93,18 @@ Add the auth token)."
 	   :sync sync
 	   :timeout (or timeout toggl-default-timeout)))
 
+(defun toggl-request-delete (request &optional sync success-fun error-fun timeout)
+  "Send a DELETE REQUEST to toggl.com, with TIMEOUT.
+Add the auth token)."
+  (request (toggl-create-api-url request)
+	   :type "DELETE"
+	   :parser #'json-read
+	   :headers (list (toggl-prepare-auth-header))
+	   :success success-fun
+	   :error error-fun
+	   :sync sync
+	   :timeout (or timeout toggl-default-timeout)))
+
 (defvar toggl-projects nil
   "A list of available projects.
 Each project is a cons cell with car equal to its name and cdr to
