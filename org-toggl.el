@@ -176,6 +176,24 @@ It is assumed that no two projects have the same name."
 	(when show-message (message "Stopping time entry failed because %s" error-thrown)))))
     (setq toggl-current-time-entry nil)))
 
+(defun toggl-delete-time-entry (&optional tid show-message)
+  "Delete a Toggl time entry.
+By default, delete the current one."
+  (interactive "ip")
+  (when toggl-current-time-entry
+    (setq tid (or tid (alist-get 'id (alist-get 'data toggl-current-time-entry))))
+    (toggl-request-delete
+     (format "time_entries/%s" tid)
+     nil
+     (cl-function
+      (lambda (&key data &allow-other-keys)
+	(when (= tid (alist-get 'id (alist-get 'data toggl-current-time-entry)))
+	  (setq toggl-current-time-entry nil))
+	(when show-message (message "Toggl time entry deleted."))))
+     (cl-function
+      (lambda (&key error-thrown &allow-other-keys)
+	(when show-message (message "Deleting time entry failed because %s" error-thrown)))))))
+
 (defun toggl-get-pid (project)
   "Get PID given PROJECT's name."
   (cdr (assoc project toggl-projects)))
