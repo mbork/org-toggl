@@ -204,7 +204,7 @@ By default, delete the current one."
 (defun org-toggl-clock-in ()
   "Start a Toggl time entry based on current heading."
   (let* ((heading (substring-no-properties (org-get-heading t t t t)))
-	 (project (org-entry-get (point) "project" org-toggl-inherit-toggl-properties))
+	 (project (org-entry-get (point) "toggl-project" org-toggl-inherit-toggl-properties))
 	 (pid (toggl-get-pid project)))
     (when pid (toggl-start-time-entry heading pid t))))
 
@@ -219,7 +219,7 @@ By default, delete the current one."
 (defun org-toggl-set-project (project)
   "Save PROJECT in the properties of the current Org headline."
   (interactive (list (completing-read "Toggl project for this headline: " toggl-projects nil t))) ; TODO: dry!
-  (org-set-property "project" project))
+  (org-set-property "toggl-project" project))
 
 (define-minor-mode org-toggl-integration-mode
   "Toggle a (global) minor mode for Org/Toggl integration.
