@@ -6,6 +6,10 @@ This is a (very) simple Emacs and Org-mode interface to Toggl,
 a cloud-based time-tracking service.  It is bascially done by me for
 myself, though other people might find it useful.
 
+This project is completely unrelated to [[https://github.com/mattduck/org-toggl-py][org-toggl-py]].  Due to the
+limitations of =org-toggl= (see below), you may decide that
+=org-toggl-py= suits your needs better.
+
 Put this into your =init.el= to get the most of =org-toggl=:
 
 #+BEGIN_SRC elisp
