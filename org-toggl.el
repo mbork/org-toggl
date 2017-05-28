@@ -204,6 +204,7 @@ By default, delete the current one."
 
 (defun org-toggl-clock-in ()
   "Start a Toggl time entry based on current heading."
+  (interactive)
   (let* ((heading (substring-no-properties (org-get-heading t t t t)))
 	 (project (org-entry-get (point) "toggl-project" org-toggl-inherit-toggl-properties))
 	 (pid (toggl-get-pid project)))
