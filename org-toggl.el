@@ -30,7 +30,6 @@
 
 (require 'json)
 (require 'request)
-(require 'request-deferred)
 
 (defcustom toggl-auth-token ""
   "Authentication token for Toggl."
