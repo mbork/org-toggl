@@ -1,0 +1,40 @@
+#+TITLE: A simple Org-mode interface to Toggl
+#+AUTHOR: Marcin Borkowski
+#+EMAIL: mbork@mbork.pl
+
+This is a (very) simple Emacs and Org-mode interface to Toggl,
+a cloud-based time-tracking service.  It is bascially done by me for
+myself, though other people might find it useful.
+
+Put this into your =init.el= to get the most of =org-toggl=:
+
+#+BEGIN_SRC elisp
+(setq toggl-auth-token "...")
+(setq org-toggl-inherit-toggl-properties t)
+(require 'org-toggl)
+(toggl-get-projects)
+(org-toggl-integration-mode)
+#+END_SRC
+
+You may say =M-x toggl-get-projects= to download project info from
+your account.
+
+If you don't use Org-mode, you may then use =M-x
+toggl-select-default-project= to select the project your entries will
+go to, =M-x toggl-start-time-entry=, =M-x toggl-stop-time-entry= and
+=M-x toggl-delete-time-entry= to start, stop and delete entries.
+
+If you use Org-mode, put the point on a heading and say =M-x
+org-toggl-set-project= to associate that heading (and its subheadings,
+if =org-toggl-inherit-toggl-properties= is non-nil) with a project.
+Then, if =org-toggl-integration-mode= minor mode is on, clocking
+in/out of such a task will start/stop the respective Toggl entry.
+
+*Warning:* as of now, =org-toggl= is very simplistic and hasa few
+limitations.  The most serious is that due to asynchronicity of http
+requests, if you start clocking and then immediately stop/cancel it,
+the Toggl entry is not stopped/deleted.  (This could be fixed, but I'm
+not sure whether it's worth the effort.)  Another one is that if you
+shorten the Org clock (see =(info "(org) Resolving idle time")=), this
+does not get reflected in Toggl.  Again, this is fixable if demand
+arises.
