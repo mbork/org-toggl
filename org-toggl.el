@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2016  Marcin Borkowski
 
-;; Author: Marcin Borkowski <mbork@wmi.amu.edu.pl>
+;; Author: Marcin Borkowski <mbork@mbork.pl>
 ;; Keywords: calendar
 ;; Package-Requires: ((request "0.2.0"))
 
