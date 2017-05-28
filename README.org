@@ -30,7 +30,7 @@ if =org-toggl-inherit-toggl-properties= is non-nil) with a project.
 Then, if =org-toggl-integration-mode= minor mode is on, clocking
 in/out of such a task will start/stop the respective Toggl entry.
 
-*Warning:* as of now, =org-toggl= is very simplistic and hasa few
+*Warning:* as of now, =org-toggl= is very simplistic and has a few
 limitations.  The most serious is that due to asynchronicity of http
 requests, if you start clocking and then immediately stop/cancel it,
 the Toggl entry is not stopped/deleted.  (This could be fixed, but I'm
