@@ -37,12 +37,12 @@
   :group 'toggl)
 
 (defcustom toggl-default-timeout 20
-  "Default timeout for HTTP requests.")
-
-(defcustom toggl-api-url "https://www.toggl.com/api/v8/"
-  "The URL for making API calls."
-  :type 'string
+  "Default timeout for HTTP requests."
+  :type 'integer
   :group 'toggl)
+
+(defvar toggl-api-url "https://www.toggl.com/api/v8/"
+  "The URL for making API calls.")
 
 (defun toggl-create-api-url (string)
   "Prepend Toogl API URL to STRING."
@@ -198,7 +198,9 @@ By default, delete the current one."
   (cdr (assoc project toggl-projects)))
 
 (defcustom org-toggl-inherit-toggl-properties nil
-  "Make org-toggl use property inheritance.")
+  "Make org-toggl use property inheritance."
+  :type 'boolean
+  :group 'toggl)
 
 (defun org-toggl-clock-in ()
   "Start a Toggl time entry based on current heading."
