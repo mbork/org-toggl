@@ -165,7 +165,7 @@ It is assumed that no two projects have the same name."
     (toggl-request-put
      (format "time_entries/%s/stop"
 	     (alist-get 'id (alist-get 'data toggl-current-time-entry)))
-     nil
+     (json-encode nil)
      nil
      (cl-function
       (lambda (&key data &allow-other-keys)
