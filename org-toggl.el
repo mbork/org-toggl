@@ -86,7 +86,8 @@ Add the auth token)."
            :data data
            :parser #'json-read
            :headers (list (toggl-prepare-auth-header)
-                          '("Content-Type" . "application/json"))
+                          '("Content-Type" . "application/json")
+                          '("Content-Length" . "0"))
            :success success-fun
            :error error-fun
            :sync sync
