@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'org)
 (require 'json)
 (require 'request)
 
