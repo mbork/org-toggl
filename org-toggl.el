@@ -41,7 +41,7 @@
   :type 'integer
   :group 'toggl)
 
-(defvar toggl-api-url "https://www.toggl.com/api/v8/"
+(defvar toggl-api-url "https://api.track.toggl.com/api/v8/"
   "The URL for making API calls.")
 
 (defun toggl-create-api-url (string)
