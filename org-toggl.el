@@ -36,17 +36,22 @@
   :type 'string
   :group 'toggl)
 
+(defcustom toggl-workspace-id ""
+  "Toggl workspace id to work with"
+  :type 'string
+  :group 'toggl)
+
 (defcustom toggl-default-timeout 20
   "Default timeout for HTTP requests."
   :type 'integer
   :group 'toggl)
 
-(defvar toggl-api-url "https://api.track.toggl.com/api/v8/"
+(defvar toggl-api-url "https://api.track.toggl.com/api/v9/workspaces/"
   "The URL for making API calls.")
 
 (defun toggl-create-api-url (string)
   "Prepend Toogl API URL to STRING."
-  (concat toggl-api-url string))
+  (concat toggl-api-url toggl-workspace-id string))
 
 (defun toggl-prepare-auth-header ()
   "Return a cons to be put into headers for authentication."
@@ -116,15 +121,16 @@ its id.")
   "Fill in `toggl-projects' (asynchronously)."
   (interactive)
   (toggl-request-get
-   "me?with_related_data=true"
+   "/projects"
    nil
    (cl-function
     (lambda (&key data &allow-other-keys)
       (setq toggl-projects
-	    (mapcar (lambda (project)
-		      (cons (substring-no-properties (alist-get 'name project))
-			    (alist-get 'id project)))
-		    (alist-get 'projects (alist-get 'data data))))
+            (mapcar (lambda (project)
+                      (cons (substring-no-properties (alist-get 'name project)) (alist-get 'id project)))
+                    data
+                    )
+            )
       (message "Toggl projects successfully downloaded.")))
    (cl-function
     (lambda (&key error-thrown &allow-other-keys)
