@@ -38,7 +38,7 @@
 
 (defcustom toggl-workspace-id ""
   "Toggl workspace id to work with"
-  :type 'string
+  :type 'integer
   :group 'toggl)
 
 (defcustom toggl-default-timeout 20
