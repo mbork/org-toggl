@@ -145,16 +145,45 @@ It is assumed that no two projects have the same name."
   (interactive (list (completing-read "Default project: " toggl-projects nil t)))
   (setq toggl-default-project (toggl-get-pid project)))
 
-(defun toggl-start-time-entry (description &optional pid show-message)
-  "Start Toggl time entry."
-  (interactive "MDescription: \ni\np")
-  (setq pid (or pid toggl-default-project))
+(defun toggl-get-project-id-by-name (project)
+  "Select project id by selecting interactively with a list of names"
+  (interactive (list (completing-read "Select the project where the time entry will be regitered: " toggl-projects nil t)))
+  (toggl-get-pid project))
+
+
+
+(defun format-time-zone-offset (offset)
+  "Formats the time zone OFFSET as HH:MM."
+  (let ((time (format-time-string "%z")))
+    (concat
+     (substring time 0 3)
+     ":"
+     (substring time 3)))
+  )
+
+(defun get-current-date-time ()
+  (concat (format-time-string "%Y-%m-%dT%H:%M:%S" (current-time))
+          (format-time-zone-offset (format-time-string "%z" (current-time)))
+          )
+)
+
+(defun toggl-start-time-entry (&optional description pid show-message)
+  "Start Toggl time entry.
+   if description is not set then it will ask it
+   if pid is not set  then it will ask it from the list of projects"
+  (interactive)
+  (setq description (or description (read-from-minibuffer "Please enter a description for the task: ")))
+  (setq pid (or pid (call-interactively 'toggl-get-project-id-by-name)))
+
   (toggl-request-post
-   "time_entries/start"
-   (json-encode `(("time_entry" .
-		   (("description" . ,description)
-		    ("pid" . ,pid)
-		    ("created_with" . "mbork's Emacs toggl client")))))
+   "/time_entries"
+   (json-encode `(("description" . ,description)
+                  ("project_id" . ,pid)
+		              ("created_with" . "mbork's Emacs toggl client")
+                  ("start" . ,(get-current-date-time))
+                  ("wid" . ,(string-to-number toggl-workspace-id))
+                  ("duration" . -1)
+                  ))
    nil
    (cl-function
     (lambda (&key data &allow-other-keys)
@@ -162,7 +191,9 @@ It is assumed that no two projects have the same name."
       (when show-message (message "Toggl time entry started."))))
    (cl-function
     (lambda (&key error-thrown &allow-other-keys)
-      (when show-message (message "Starting time entry failed because %s" error-thrown))))))
+      (when show-message (message "Starting time entry failed because %s" error-thrown)))))
+
+  )
 
 (defun toggl-stop-time-entry (&optional show-message)
   "Stop running Toggl time entry."
