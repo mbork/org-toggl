@@ -167,10 +167,12 @@ It is assumed that no two projects have the same name."
           )
 )
 
-(defun toggl-start-time-entry (&optional description pid show-message)
+(defun toggl-start-time-entry (&optional description tags show-message pid)
   "Start Toggl time entry.
    if description is not set then it will ask it
-   if pid is not set  then it will ask it from the list of projects"
+   if pid is not set  then it will ask it from the list of projects
+   tags is passed as a list in order to convert it to json array
+   "
   (interactive)
   (setq description (or description (read-from-minibuffer "Please enter a description for the task: ")))
   (setq pid (or pid (call-interactively 'toggl-get-project-id-by-name)))
@@ -182,16 +184,22 @@ It is assumed that no two projects have the same name."
 		              ("created_with" . "mbork's Emacs toggl client")
                   ("start" . ,(get-current-date-time))
                   ("wid" . ,(string-to-number toggl-workspace-id))
+                  ("tags" . ,tags)
                   ("duration" . -1)
                   ))
    nil
    (cl-function
     (lambda (&key data &allow-other-keys)
+      (message "%s" data)
+      (when show-message (message "Toggl time entry started."))
       (setq toggl-current-time-entry data)
-      (when show-message (message "Toggl time entry started."))))
+      )
+    )
    (cl-function
     (lambda (&key error-thrown &allow-other-keys)
-      (when show-message (message "Starting time entry failed because %s" error-thrown)))))
+      (when show-message (message "Starting time entry failed because %s" error-thrown)))
+    )
+   )
 
   )
 
@@ -239,13 +247,16 @@ By default, delete the current one."
   :type 'boolean
   :group 'toggl)
 
+
 (defun org-toggl-clock-in ()
   "Start a Toggl time entry based on current heading."
   (interactive)
-  (let* ((heading (substring-no-properties (org-get-heading t t t t)))
-	 (project (org-entry-get (point) "toggl-project" org-toggl-inherit-toggl-properties))
-	 (pid (toggl-get-pid project)))
-    (when pid (toggl-start-time-entry heading pid t))))
+  (toggl-start-time-entry
+   (org-get-heading t t t t)
+   (org-get-tags nil t)
+   t
+   )
+  )
 
 (defun org-toggl-clock-out ()
   "Stop the running Toggle time entry."
