@@ -83,11 +83,11 @@ Add the auth token)."
 	   :sync sync
 	   :timeout (or timeout toggl-default-timeout)))
 
-(defun toggl-request-put (request data &optional sync success-fun error-fun timeout)
-  "Send a GET REQUEST to toggl.com, with TIMEOUT.
+(defun toggl-request-patch (request data &optional sync success-fun error-fun timeout)
+  "Send PATCH REQUEST to toggl.com, with TIMEOUT.
 Add the auth token)."
   (request (toggl-create-api-url request)
-	   :type "PUT"
+	   :type "PATCH"
 	   :data data
 	   :parser #'json-read
 	   :headers (list (toggl-prepare-auth-header)
@@ -199,9 +199,9 @@ It is assumed that no two projects have the same name."
   "Stop running Toggl time entry."
   (interactive "p")
   (when toggl-current-time-entry
-    (toggl-request-put
-     (format "time_entries/%s/stop"
-	     (alist-get 'id (alist-get 'data toggl-current-time-entry)))
+    (toggl-request-patch
+     (format "/time_entries/%s/stop"
+	     (alist-get 'id toggl-current-time-entry))
      nil
      nil
      (cl-function
@@ -219,7 +219,7 @@ By default, delete the current one."
   (when toggl-current-time-entry
     (setq tid (or tid (alist-get 'id (alist-get 'data toggl-current-time-entry))))
     (toggl-request-delete
-     (format "time_entries/%s" tid)
+     (format "/time_entries/%s" tid)
      nil
      (cl-function
       (lambda (&key data &allow-other-keys)
