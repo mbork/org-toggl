@@ -102,7 +102,7 @@ Add the auth token)."
 Add the auth token)."
   (request (toggl-create-api-url request)
 	   :type "DELETE"
-	   :parser #'json-read
+	   :parser 'buffer-string
 	   :headers (list (toggl-prepare-auth-header))
 	   :success success-fun
 	   :error error-fun
@@ -217,15 +217,15 @@ It is assumed that no two projects have the same name."
 By default, delete the current one."
   (interactive "ip")
   (when toggl-current-time-entry
-    (setq tid (or tid (alist-get 'id (alist-get 'data toggl-current-time-entry))))
     (toggl-request-delete
-     (format "/time_entries/%s" tid)
+     (format "/time_entries/%s" (alist-get 'id toggl-current-time-entry))
      nil
      (cl-function
-      (lambda (&key data &allow-other-keys)
-	(when (= tid (alist-get 'id (alist-get 'data toggl-current-time-entry)))
-	  (setq toggl-current-time-entry nil))
-	(when show-message (message "Toggl time entry deleted."))))
+      (lambda (&key response &allow-other-keys)
+        (when (= (request-response-status-code response) 200)
+          (setq toggl-current-time-entry nil))
+		      (when show-message (message "Toggl time entry deleted.")))
+      )
      (cl-function
       (lambda (&key error-thrown &allow-other-keys)
 	(when show-message (message "Deleting time entry failed because %s" error-thrown)))))))
