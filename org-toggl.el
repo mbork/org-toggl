@@ -145,11 +145,21 @@ It is assumed that no two projects have the same name."
   (interactive (list (completing-read "Default project: " toggl-projects nil t)))
   (setq toggl-default-project (toggl-get-pid project)))
 
+(defun toggl-select-project (project)
+  "Select project id by selecting interactively with a list of names"
+  (interactive (list (completing-read "Select the project where the time entry will be regitered: "
+                                      toggl-projects nil t)
+                     )
+               )
+  (setq project project)
+  )
+
+
+
 (defun toggl-get-project-id-by-name (project)
   "Select project id by selecting interactively with a list of names"
   (interactive (list (completing-read "Select the project where the time entry will be regitered: " toggl-projects nil t)))
   (toggl-get-pid project))
-
 
 
 (defun format-time-zone-offset (offset)
@@ -167,7 +177,7 @@ It is assumed that no two projects have the same name."
           )
 )
 
-(defun toggl-start-time-entry (&optional description tags show-message pid)
+(defun toggl-start-time-entry (&optional description tags pid show-message)
   "Start Toggl time entry.
    if description is not set then it will ask it
    if pid is not set  then it will ask it from the list of projects
@@ -175,7 +185,6 @@ It is assumed that no two projects have the same name."
    "
   (interactive)
   (setq description (or description (read-from-minibuffer "Please enter a description for the task: ")))
-  (setq pid (or pid (call-interactively 'toggl-get-project-id-by-name)))
 
   (toggl-request-post
    "/time_entries"
@@ -190,9 +199,8 @@ It is assumed that no two projects have the same name."
    nil
    (cl-function
     (lambda (&key data &allow-other-keys)
-      (message "%s" data)
-      (when show-message (message "Toggl time entry started."))
       (setq toggl-current-time-entry data)
+      (when show-message (message "Toggl time entry started."))
       )
     )
    (cl-function
@@ -258,9 +266,14 @@ By default, delete the current one."
 (defun org-toggl-clock-in ()
   "Start a Toggl time entry based on current heading."
   (interactive)
+  (when (not (org-entry-get nil "TOGGL_PROJECT"))
+    (org-set-property "TOGGL_PROJECT" (call-interactively 'toggl-select-project))
+    )
+
   (toggl-start-time-entry
    (org-get-heading t t t t)
    (org-get-tags nil t)
+   (toggl-get-project-id-by-name (org-entry-get nil "TOGGL_PROJECT"))
    t
    )
   )
@@ -273,10 +286,6 @@ By default, delete the current one."
   "Delete the running Toggle time entry."
   (toggl-delete-time-entry nil t))
 
-(defun org-toggl-set-project (project)
-  "Save PROJECT in the properties of the current Org headline."
-  (interactive (list (completing-read "Toggl project for this headline: " toggl-projects nil t))) ; TODO: dry!
-  (org-set-property "toggl-project" project))
 
 (define-minor-mode org-toggl-integration-mode
   "Toggle a (global) minor mode for Org/Toggl integration.
