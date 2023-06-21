@@ -251,6 +251,57 @@ By default, delete the current one."
   (interactive (list (completing-read "Toggl project for this headline: " toggl-projects nil t))) ; TODO: dry!
   (org-set-property "toggl-project" project))
 
+(defun org-toggl-submit-clock-at-point (&optional show-message)
+  "Submit the clock entry at point to Toggl."
+  (interactive "p")
+  (let ((element (org-element-at-point)))
+    (if (eq (org-element-type element) 'clock)
+	(let* ((heading (substring-no-properties (org-get-heading t t t t)))
+	       (project (org-entry-get (point) "toggl-project" org-toggl-inherit-toggl-properties))
+	       (pid (or (toggl-get-pid project) toggl-default-project))
+	       (timestamp (org-element-property :value element))
+	       (year-start (org-element-property :year-start timestamp))
+	       (month-start (org-element-property :month-start timestamp))
+	       (day-start (org-element-property :day-start timestamp))
+	       (hour-start (org-element-property :hour-start timestamp))
+	       (minute-start (org-element-property :minute-start timestamp))
+	       (year-end (org-element-property :year-end timestamp))
+	       (month-end (org-element-property :month-end timestamp))
+	       (day-end (org-element-property :day-end timestamp))
+	       (hour-end (org-element-property :hour-end timestamp))
+	       (minute-end (org-element-property :minute-end timestamp))
+	       (start-time (time-to-seconds (encode-time
+					     0
+					     minute-start
+					     hour-start
+					     day-start
+					     month-start
+					     year-start)))
+	       (stop-time (time-to-seconds (encode-time
+					    0
+					    minute-end
+					    hour-end
+					    day-end
+					    month-end
+					    year-end))))
+	  (toggl-request-post
+     (format "workspaces/%s/time_entries" toggl-workspace-id)
+     (json-encode `(("description" . ,heading)
+		    ("project_id" . ,pid)
+		    ("created_with" . "mbork's Emacs toggl client")
+		    ("start" . ,(format-time-string "%FT%TZ" start-time t))
+		    ("stop" . ,(format-time-string "%FT%TZ" stop-time t))
+		    ("workspace_id" . ,toggl-workspace-id)))
+     nil
+     (cl-function
+      (lambda (&key data &allow-other-keys)
+	(setq toggl-current-time-entry data)
+	(when show-message (message "Toggl time entry submitted."))))
+     (cl-function
+      (lambda (&key error-thrown &allow-other-keys)
+	(when show-message (message "Starting time entry failed because %s" error-thrown))))))
+      (error "No clock at point"))))
+
 (define-minor-mode org-toggl-integration-mode
   "Toggle a (global) minor mode for Org/Toggl integration.
 When on, clocking in and out starts and stops Toggl time entries
