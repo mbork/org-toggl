@@ -10,10 +10,16 @@ This project is completely unrelated to [[https://github.com/mattduck/org-toggl-
 limitations of =org-toggl= (see below), you may decide that
 =org-toggl-py= suits your needs better.
 
-Put this into your =init.el= to get the most of =org-toggl=:
+Put this into your =init.el= to get the most of =org-toggl=.  To get
+the Auth token, go to your profile settings and scroll to the bottom.
+To get the workspace id, click the down arrow on the top left, select
+"manage workspaces", select the workspace and copy the second number
+from the URL.  (A better way would be for the user to set workspace
+/name/ and get the id in ~toggl-get-projects~.  PRs welcome.)
 
 #+BEGIN_SRC elisp
 (setq toggl-auth-token "...")
+(setq toggl-workspace-id 123456)
 (setq org-toggl-inherit-toggl-properties t)
 (require 'org-toggl)
 (toggl-get-projects)
@@ -28,17 +34,18 @@ toggl-select-default-project= to select the project your entries will
 go to, =M-x toggl-start-time-entry=, =M-x toggl-stop-time-entry= and
 =M-x toggl-delete-time-entry= to start, stop and delete entries.
 
-If you use Org mode, put the point on a heading and say =M-x
+If you use Org mode (which is the recommended way to interact with
+~org-toggl~), put the point on a heading and say =M-x
 org-toggl-set-project= to associate that heading (and its subheadings,
 if =org-toggl-inherit-toggl-properties= is non-nil) with a project.
 Then, if =org-toggl-integration-mode= minor mode is on, clocking
-in/out of such a task will start/stop the respective Toggl entry.
+in/out of such a heading will start/stop the respective Toggl entry.
 
 *Warning:* as of now, =org-toggl= is very simplistic and has a few
 limitations.  The most serious is that due to asynchronicity of http
-requests, if you start clocking and then immediately stop/cancel it,
+requests, if you start clocking and then immediately stop/cancel it
+(before the response to the starting requests comes and is processed),
 the Toggl entry is not stopped/deleted.  (This could be fixed, but I'm
 not sure whether it's worth the effort.)  Another one is that if you
 shorten the Org clock (see =(info "(org) Resolving idle time")=), this
-does not get reflected in Toggl.  Again, this is fixable if demand
-arises.
+does not get reflected in Toggl.  Again, PRs welcome.
