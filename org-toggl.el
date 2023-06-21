@@ -41,7 +41,16 @@
   :type 'integer
   :group 'toggl)
 
-(defvar toggl-api-url "https://api.track.toggl.com/api/v8/"
+;; FIXME change this to name and get the id in `toggl-get-projects'
+(defcustom toggl-workspace-id nil
+  "Toggl workspace id.
+Can be looked up in the URL.  Click \"manage workspaces\" and
+select the workspace - the number after `/workspaces/` is the
+workspace id."
+  :type 'integer
+  :group 'toggl)
+
+(defvar toggl-api-url "https://api.track.toggl.com/api/v9/"
   "The URL for making API calls.")
 
 (defun toggl-create-api-url (string)
@@ -82,7 +91,21 @@ Add the auth token)."
   "Send a GET REQUEST to toggl.com, with TIMEOUT.
 Add the auth token)."
   (request (toggl-create-api-url request)
-	   :type "PUT"
+    :type "PUT"
+    :data data
+    :parser #'json-read
+    :headers (list (toggl-prepare-auth-header)
+		   '("Content-Type" . "application/json"))
+    :success success-fun
+    :error error-fun
+    :sync sync
+    :timeout (or timeout toggl-default-timeout)))
+
+(defun toggl-request-patch (request data &optional sync success-fun error-fun timeout)
+  "Send a PATCH REQUEST to toggl.com, with TIMEOUT.
+Add the auth token)."
+  (request (toggl-create-api-url request)
+	   :type "PATCH"
 	   :data data
 	   :parser #'json-read
 	   :headers (list (toggl-prepare-auth-header)
@@ -97,7 +120,7 @@ Add the auth token)."
 Add the auth token)."
   (request (toggl-create-api-url request)
 	   :type "DELETE"
-	   :parser #'json-read
+	   ;; :parser #'buffer-string
 	   :headers (list (toggl-prepare-auth-header))
 	   :success success-fun
 	   :error error-fun
@@ -124,7 +147,7 @@ its id.")
 	    (mapcar (lambda (project)
 		      (cons (substring-no-properties (alist-get 'name project))
 			    (alist-get 'id project)))
-		    (alist-get 'projects (alist-get 'data data))))
+		    (alist-get 'projects data)))
       (message "Toggl projects successfully downloaded.")))
    (cl-function
     (lambda (&key error-thrown &allow-other-keys)
@@ -144,11 +167,13 @@ It is assumed that no two projects have the same name."
   (interactive "MDescription: \ni\np")
   (setq pid (or pid toggl-default-project))
   (toggl-request-post
-   "time_entries/start"
-   (json-encode `(("time_entry" .
-		   (("description" . ,description)
-		    ("pid" . ,pid)
-		    ("created_with" . "mbork's Emacs toggl client")))))
+   (format "workspaces/%s/time_entries" toggl-workspace-id)
+   (json-encode `(("description" . ,description)
+		  ("duration" . -1)
+		  ("project_id" . ,pid)
+		  ("created_with" . "mbork's Emacs toggl client")
+		  ("start" . ,(format-time-string "%FT%TZ" nil t))
+		  ("workspace_id" . ,toggl-workspace-id)))
    nil
    (cl-function
     (lambda (&key data &allow-other-keys)
@@ -162,17 +187,20 @@ It is assumed that no two projects have the same name."
   "Stop running Toggl time entry."
   (interactive "p")
   (when toggl-current-time-entry
-    (toggl-request-put
-     (format "time_entries/%s/stop"
-	     (alist-get 'id (alist-get 'data toggl-current-time-entry)))
-     nil
-     nil
-     (cl-function
-      (lambda (&key data &allow-other-keys)
-	(when show-message (message "Toggl time entry stopped."))))
-     (cl-function
-      (lambda (&key error-thrown &allow-other-keys)
-	(when show-message (message "Stopping time entry failed because %s" error-thrown)))))
+    (let ((time-entry-id (alist-get 'id toggl-current-time-entry)))
+      (toggl-request-patch
+       (format "workspaces/%s/time_entries/%s/stop"
+	       toggl-workspace-id
+	       time-entry-id)
+       (json-encode `(("time_entry_id" . ,time-entry-id)
+		      ("workspace_id" . ,toggl-workspace-id)))
+       nil
+       (cl-function
+	(lambda (&key data &allow-other-keys)
+	  (when show-message (message "Toggl time entry stopped."))))
+       (cl-function
+	(lambda (&key error-thrown &allow-other-keys)
+	  (when show-message (message "Stopping time entry failed because %s" error-thrown))))))
     (setq toggl-current-time-entry nil)))
 
 (defun toggl-delete-time-entry (&optional tid show-message)
@@ -180,13 +208,13 @@ It is assumed that no two projects have the same name."
 By default, delete the current one."
   (interactive "ip")
   (when toggl-current-time-entry
-    (setq tid (or tid (alist-get 'id (alist-get 'data toggl-current-time-entry))))
+    (setq tid (or tid (alist-get 'id toggl-current-time-entry)))
     (toggl-request-delete
-     (format "time_entries/%s" tid)
+     (format "workspaces/%s/time_entries/%s" toggl-workspace-id tid)
      nil
      (cl-function
       (lambda (&key data &allow-other-keys)
-	(when (= tid (alist-get 'id (alist-get 'data toggl-current-time-entry)))
+	(when (= tid (alist-get 'id toggl-current-time-entry))
 	  (setq toggl-current-time-entry nil))
 	(when show-message (message "Toggl time entry deleted."))))
      (cl-function
